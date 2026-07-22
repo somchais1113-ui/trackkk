@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ตารางเดินรถพิเศษโดยสาร (ฉุกเฉิน) วัน ARL ตกราง 22/07/69</title>
+<meta name="description" content="ตารางเดินรถพิเศษโดยสาร (ฉุกเฉิน) ช่วงพญาไท - ลาดกระบัง วันที่ 22 กรกฎาคม 2569 พร้อมระบบวางแผนการเดินทาง">
+<meta name="theme-color" content="#0B2360">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   1. DESIGN TOKENS  (CI สีน้ำเงินตามต้นฉบับป้ายประกาศ)
+   ============================================================ */
+:root{
+  --navy-900:#0B2360;   /* แถบหัวเรื่อง */
+  --navy-800:#12307A;   /* พื้นหลังหลัก */
+  --navy-700:#1A4699;   /* หัวตาราง / แถวสถานีหลัก */
+  --navy-600:#24509F;
+  --blue-500:#1F63C4;   /* ตัวเลขเวลาสถานีหลัก */
+  --blue-200:#C9DBF4;
+  --blue-100:#E8F0FB;
+  --paper   :#F2F5FA;   /* พื้นแถวสลับ */
+  --white   :#FFFFFF;
+  --ink     :#12203D;
+  --ink-mute:#5A6C8C;
+  --red     :#8E1B26;   /* แถบเน้นย้ำท้ายตาราง */
+  --amber   :#B4740B;   /* คำเตือน */
+  --green   :#0E7A52;   /* สถานะปกติ */
+
+  --font-display:'Bai Jamjuree','IBM Plex Sans Thai',sans-serif;
+  --font-body:'IBM Plex Sans Thai',system-ui,sans-serif;
+
+  --radius:10px;
+  --shadow:0 2px 16px rgba(11,35,96,.14);
+  --maxw:1280px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font-body);
+  background:var(--navy-800);
+  color:var(--ink);
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:48px;
+}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 14px}
+
+/* ============================================================
+   2. HEADER
+   ============================================================ */
+.masthead{
+  background:var(--navy-900);
+  border-bottom:3px solid var(--blue-500);
+  padding:18px 0 20px;
+}
+.masthead h1{
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:clamp(1.15rem,3.4vw,2rem);
+  color:#fff;
+  text-align:center;
+  letter-spacing:.2px;
+  line-height:1.3;
+}
+.masthead .sub{
+  text-align:center;color:var(--blue-200);
+  font-size:.86rem;margin-top:6px;font-weight:500;
+}
+
+/* แถบข้อมูลสด: นาฬิกา + อากาศ */
+.livebar{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:16px;
+}
+.livecard{
+  background:rgba(255,255,255,.07);
+  border:1px solid rgba(201,219,244,.28);
+  border-radius:var(--radius);
+  padding:12px 14px;
+  color:#fff;
+  display:flex;align-items:center;gap:12px;
+}
+.livecard .lbl{
+  font-size:.7rem;letter-spacing:1.2px;text-transform:uppercase;
+  color:var(--blue-200);font-weight:600;display:block;margin-bottom:2px;
+}
+.clock-time{
+  font-family:var(--font-display);font-weight:700;
+  font-size:clamp(1.5rem,4.6vw,2.1rem);line-height:1;
+  font-variant-numeric:tabular-nums;letter-spacing:.5px;
+}
+.clock-date{font-size:.82rem;color:var(--blue-200);margin-top:3px}
+.wx-temp{
+  font-family:var(--font-display);font-weight:700;
+  font-size:clamp(1.5rem,4.6vw,2.1rem);line-height:1;
+}
+.wx-desc{font-size:.82rem;color:var(--blue-200);margin-top:3px}
+.wx-meta{font-size:.74rem;color:var(--blue-200);opacity:.85}
+.wx-icon{font-size:1.9rem;line-height:1}
+
+/* ============================================================
+   3. แถบอัปเดตสถานะแบบเรียลไทม์
+   ============================================================ */
+.status{
+  margin-top:12px;
+  background:#fff;
+  border-radius:var(--radius);
+  border-left:6px solid var(--green);
+  box-shadow:var(--shadow);
+  padding:13px 16px;
+}
+.status.is-warn{border-left-color:var(--amber)}
+.status.is-alert{border-left-color:var(--red)}
+.status-head{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  font-size:.72rem;letter-spacing:1px;font-weight:700;color:var(--ink-mute);
+}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--green);
+     box-shadow:0 0 0 0 rgba(14,122,82,.6);animation:pulse 2s infinite}
+.is-warn .dot{background:var(--amber);box-shadow:0 0 0 0 rgba(180,116,11,.6)}
+.is-alert .dot{background:var(--red);box-shadow:0 0 0 0 rgba(142,27,38,.6)}
+@keyframes pulse{
+  70%{box-shadow:0 0 0 9px rgba(0,0,0,0)}
+  100%{box-shadow:0 0 0 0 rgba(0,0,0,0)}
+}
+.status-msg{margin-top:6px;font-size:.95rem;font-weight:500;color:var(--ink)}
+.status-list{margin-top:8px;padding-left:18px;font-size:.88rem;color:var(--ink-mute)}
+.status-list li{margin-bottom:3px}
+.status-foot{
+  margin-top:9px;display:flex;justify-content:space-between;
+  align-items:center;gap:10px;flex-wrap:wrap;
+  font-size:.75rem;color:var(--ink-mute)
+}
+.btn-refresh{
+  background:var(--navy-700);color:#fff;border:0;border-radius:6px;
+  padding:6px 13px;font-family:var(--font-body);font-size:.78rem;
+  font-weight:600;cursor:pointer;transition:background .18s;
+}
+.btn-refresh:hover{background:var(--blue-500)}
+.btn-refresh:disabled{opacity:.55;cursor:progress}
+
+/* ============================================================
+   4. การ์ดเนื้อหาทั่วไป
+   ============================================================ */
+.card{
+  background:#fff;border-radius:var(--radius);
+  box-shadow:var(--shadow);margin-top:18px;overflow:hidden;
+}
+.card-head{
+  background:var(--navy-700);color:#fff;
+  padding:11px 16px;display:flex;align-items:center;
+  justify-content:space-between;gap:10px;flex-wrap:wrap;
+}
+.card-head h2{
+  font-family:var(--font-display);font-weight:700;
+  font-size:1.02rem;letter-spacing:.2px;
+}
+.card-head .hint{font-size:.75rem;color:var(--blue-200);font-weight:500}
+.card-body{padding:16px}
+
+/* ============================================================
+   5. ตัววางแผนการเดินทาง
+   ============================================================ */
+.planner{
+  display:grid;
+  grid-template-columns:1fr auto 1fr 150px;
+  gap:10px;align-items:end;
+}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label{font-size:.74rem;font-weight:700;color:var(--ink-mute);letter-spacing:.4px}
+.field select,.field input[type=time]{
+  font-family:var(--font-body);font-size:.95rem;font-weight:500;
+  padding:10px 11px;border:1.6px solid var(--blue-200);
+  border-radius:8px;background:#fff;color:var(--ink);width:100%;
+  transition:border-color .18s;
+}
+.field select:focus,.field input:focus,.btn-swap:focus-visible{
+  outline:3px solid rgba(31,99,196,.35);outline-offset:1px;
+  border-color:var(--blue-500);
+}
+.btn-swap{
+  height:42px;width:42px;border:1.6px solid var(--blue-200);
+  background:var(--blue-100);color:var(--navy-700);border-radius:8px;
+  font-size:1.05rem;cursor:pointer;transition:background .18s;
+  display:flex;align-items:center;justify-content:center;
+}
+.btn-swap:hover{background:var(--blue-200)}
+.planner-opts{
+  margin-top:12px;display:flex;gap:16px;flex-wrap:wrap;
+  font-size:.85rem;color:var(--ink-mute);align-items:center;
+}
+.planner-opts label{display:flex;align-items:center;gap:6px;cursor:pointer}
+
+/* ผลลัพธ์ */
+.route-sum{
+  margin-top:14px;padding:9px 13px;background:var(--blue-100);
+  border-radius:8px;font-size:.88rem;font-weight:600;color:var(--navy-700);
+}
+.trips{margin-top:12px;display:flex;flex-direction:column;gap:9px}
+.trip{
+  border:1.5px solid var(--blue-200);border-radius:9px;
+  padding:12px 14px;display:grid;
+  grid-template-columns:96px 1fr auto;gap:14px;align-items:center;
+  background:#fff;transition:border-color .18s,transform .18s;
+}
+.trip:hover{border-color:var(--blue-500)}
+.trip.is-next{border-color:var(--blue-500);border-width:2.5px;background:#F7FAFF}
+.trip.is-past{opacity:.5}
+.trip-no{
+  font-family:var(--font-display);font-weight:700;
+  font-size:1.32rem;color:var(--navy-700);line-height:1.1;
+}
+.trip-type{font-size:.73rem;color:var(--ink-mute);font-weight:600}
+.trip-times{
+  font-family:var(--font-display);font-weight:700;
+  font-size:1.22rem;color:var(--ink);font-variant-numeric:tabular-nums;
+}
+.trip-times .arrow{color:var(--blue-500);margin:0 7px;font-weight:500}
+.trip-meta{font-size:.78rem;color:var(--ink-mute);margin-top:2px}
+.trip-cd{text-align:right;min-width:96px}
+.cd-val{
+  font-family:var(--font-display);font-weight:700;
+  font-size:1.05rem;color:var(--blue-500);line-height:1.2;
+}
+.cd-lbl{font-size:.7rem;color:var(--ink-mute)}
+.badge{
+  display:inline-block;font-size:.68rem;font-weight:700;
+  padding:2px 7px;border-radius:4px;margin-left:6px;vertical-align:2px;
+}
+.badge-next{background:var(--blue-500);color:#fff}
+.badge-warn{background:#FDF1DC;color:var(--amber);border:1px solid #EBD3A5}
+.empty{
+  padding:26px 14px;text-align:center;color:var(--ink-mute);
+  font-size:.92rem;background:var(--paper);border-radius:9px;margin-top:12px;
+}
+
+/* ============================================================
+   6. ตารางเดินรถเต็ม
+   ============================================================ */
+.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;min-width:900px;font-size:.86rem}
+thead th{
+  background:var(--navy-700);color:#fff;padding:7px 6px;
+  text-align:center;font-weight:600;font-size:.76rem;line-height:1.35;
+  border-right:1px solid rgba(255,255,255,.16);
+}
+thead th .tno{
+  display:block;font-family:var(--font-display);font-weight:700;
+  font-size:1.12rem;letter-spacing:.3px;
+}
+thead th .trt{display:block;font-size:.68rem;color:var(--blue-200);font-weight:500}
+th.stcol{
+  background:var(--navy-900);text-align:left;min-width:170px;
+  position:sticky;left:0;z-index:3;padding-left:12px;
+}
+tbody td{
+  padding:7px 6px;text-align:center;font-weight:600;
+  font-variant-numeric:tabular-nums;border-right:1px solid #E3EAF5;
+  border-bottom:1px solid #E3EAF5;
+}
+tbody th{
+  text-align:left;padding:7px 12px;font-weight:600;font-size:.85rem;
+  background:var(--paper);position:sticky;left:0;z-index:2;
+  border-bottom:1px solid #E3EAF5;white-space:nowrap;
+}
+tbody tr:nth-child(even) td{background:var(--paper)}
+tbody tr:nth-child(odd) td{background:#fff}
+/* สถานีหลัก (เน้นตามต้นฉบับ) */
+tbody tr.key th{background:var(--navy-700);color:#fff}
+tbody tr.key td{color:var(--blue-500);font-weight:700}
+td.nostop{color:#B8C4D8;font-weight:400}
+.tbl-title{
+  font-family:var(--font-display);font-weight:700;font-size:1.3rem;
+  color:var(--navy-700);padding:0 0 8px;
+}
+
+/* ============================================================
+   7. ทางเลือกสำรอง
+   ============================================================ */
+.alts{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.alt{
+  border:1.5px solid var(--blue-200);border-radius:9px;padding:13px 14px;
+  border-top:4px solid var(--blue-500);
+}
+.alt h3{
+  font-family:var(--font-display);font-weight:700;font-size:1rem;
+  color:var(--navy-700);margin-bottom:5px;
+}
+.alt p{font-size:.86rem;color:var(--ink);margin-bottom:6px}
+.alt .note{font-size:.76rem;color:var(--ink-mute)}
+.verify{
+  margin-top:12px;background:#FDF7EA;border:1px solid #EBD3A5;
+  border-radius:8px;padding:10px 13px;font-size:.82rem;color:#6B4A08;
+}
+
+/* ============================================================
+   8. FOOTER
+   ============================================================ */
+.redbar{
+  margin-top:20px;background:var(--red);color:#fff;border-radius:var(--radius);
+  padding:13px 16px;text-align:center;font-family:var(--font-display);
+  font-weight:700;font-size:1.02rem;letter-spacing:.4px;
+}
+.credit{
+  text-align:right;color:var(--blue-200);font-size:.8rem;
+  margin-top:12px;padding-right:4px;
+}
+
+/* ============================================================
+   9. RESPONSIVE
+   ============================================================ */
+@media (max-width:820px){
+  .planner{grid-template-columns:1fr 1fr;}
+  .btn-swap{grid-column:1/-1;width:100%}
+  .livebar{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .planner{grid-template-columns:1fr}
+  .trip{grid-template-columns:1fr;gap:6px}
+  .trip-cd{text-align:left}
+  .card-body{padding:13px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important;scroll-behavior:auto}
+}
+@media print{
+  body{background:#fff}
+  .planner,.btn-refresh,.livebar{display:none}
+  .card{box-shadow:none;border:1px solid #ccc}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header class="masthead">
+  <div class="wrap">
+    <h1>ตารางเดินรถพิเศษโดยสาร (ฉุกเฉิน) วัน ARL ตกราง 22/07/69</h1>
+    <p class="sub">ช่วงพญาไท &ndash; ลาดกระบัง | ตารางเดินรถวิ่งเฉพาะวันที่ 22/07/69 เท่านั้น</p>
+
+    <div class="livebar">
+      <div class="livecard">
+        <div style="flex:1">
+          <span class="lbl">เวลาปัจจุบัน</span>
+          <div class="clock-time" id="clockTime">--:--:--</div>
+          <div class="clock-date" id="clockDate">กำลังโหลด</div>
+        </div>
+      </div>
+      <div class="livecard">
+        <div class="wx-icon" id="wxIcon">&#9925;</div>
+        <div style="flex:1">
+          <span class="lbl">สภาพอากาศ กรุงเทพมหานคร</span>
+          <div class="wx-temp" id="wxTemp">--&deg;</div>
+          <div class="wx-desc" id="wxDesc">กำลังเรียกข้อมูล</div>
+          <div class="wx-meta" id="wxMeta"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ แถบอัปเดตแบบเรียลไทม์ ============ -->
+  <section class="status" id="statusBox" aria-live="polite">
+    <div class="status-head"><span class="dot"></span><span id="statusTag">อัปเดตสถานะการเดินรถ</span></div>
+    <div class="status-msg" id="statusMsg">กำลังเรียกข้อมูลสถานะล่าสุด</div>
+    <ul class="status-list" id="statusList"></ul>
+    <div class="status-foot">
+      <span id="statusTime">&nbsp;</span>
+      <button class="btn-refresh" id="btnRefresh" type="button">รีเฟรชข้อมูล</button>
+    </div>
+  </section>
+
+  <!-- ============ วางแผนการเดินทาง ============ -->
+  <section class="card">
+    <div class="card-head">
+      <h2>วางแผนการเดินทาง</h2>
+      <span class="hint">เลือกต้นทาง ปลายทาง และเวลาที่ต้องการออกเดินทาง</span>
+    </div>
+    <div class="card-body">
+      <div class="planner">
+        <div class="field">
+          <label for="selFrom">สถานีต้นทาง</label>
+          <select id="selFrom"></select>
+        </div>
+        <button class="btn-swap" id="btnSwap" type="button" title="สลับต้นทางกับปลายทาง" aria-label="สลับต้นทางกับปลายทาง">&#8646;</button>
+        <div class="field">
+          <label for="selTo">สถานีปลายทาง</label>
+          <select id="selTo"></select>
+        </div>
+        <div class="field">
+          <label for="inpTime">ออกเดินทางตั้งแต่</label>
+          <input type="time" id="inpTime">
+        </div>
+      </div>
+
+      <div class="planner-opts">
+        <label><input type="checkbox" id="chkNow" checked> ใช้เวลาปัจจุบันอัตโนมัติ</label>
+        <label><input type="checkbox" id="chkAll"> แสดงทุกขบวนรวมรอบที่ผ่านไปแล้ว</label>
+      </div>
+
+      <div class="route-sum" id="routeSum"></div>
+      <div id="tripResults"></div>
+    </div>
+  </section>
+
+  <!-- ============ ตารางเต็ม: ไปลาดกระบัง ============ -->
+  <section class="card">
+    <div class="card-head">
+      <h2>ตารางเดินรถ: ไปลาดกระบัง</h2>
+      <span class="hint">เลื่อนตารางไปทางซ้าย-ขวาเพื่อดูขบวนทั้งหมด</span>
+    </div>
+    <div class="card-body" style="padding:0">
+      <div class="tbl-scroll"><table id="tblS"></table></div>
+    </div>
+  </section>
+
+  <!-- ============ ตารางเต็ม: ไปพญาไท ============ -->
+  <section class="card">
+    <div class="card-head">
+      <h2>ตารางเดินรถ: ไปพญาไท</h2>
+      <span class="hint">เครื่องหมาย &bull; หมายถึงขบวนนั้นไม่จอดรับส่ง</span>
+    </div>
+    <div class="card-body" style="padding:0">
+      <div class="tbl-scroll"><table id="tblN"></table></div>
+    </div>
+  </section>
+
+  <!-- ============ ทางเลือกสำรอง ============ -->
+  <section class="card">
+    <div class="card-head">
+      <h2>ทางเลือกสำรองในการเดินทาง</h2>
+      <span class="hint">กรณีรถไฟเต็มหรือรอบไม่ตรงกับเวลาที่ต้องการ</span>
+    </div>
+    <div class="card-body">
+      <div class="alts" id="altList"></div>
+      <div class="verify">
+        ข้อมูลทางเลือกสำรองด้านบนเป็นโครงข้อมูลตั้งต้นสำหรับให้ผู้ดูแลเว็บกรอกรายละเอียดจริง
+        กรุณาแก้ไขค่าในตัวแปร <strong>ALTERNATIVES</strong> ภายในไฟล์ให้ตรงกับประกาศของ Airport Rail Link
+        และ ขสมก. ในวันเดินทาง ก่อนเผยแพร่ให้ผู้โดยสารใช้งานจริง
+      </div>
+    </div>
+  </section>
+
+  <div class="redbar">&#9733; ตารางเดินรถวิ่งเฉพาะวัน 22/07/69 &#9733;</div>
+  <p class="credit">ข้อมูลตารางเดินรถ: เพจ ป้ายหยุดรถพระจอมเกล้า</p>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   ส่วนที่ 1: ข้อมูลสถานี (เรียงตามลำดับทางวิ่ง พญาไท -> ลาดกระบัง)
+   key:true คือสถานีหลักที่เน้นสีตามต้นฉบับ
+   ============================================================ */
+const STATIONS = [
+  { id:"phayathai",    name:"พญาไท",                    key:true  },
+  { id:"makkasan",     name:"มักกะสัน (ARL ราชปรารภ)",   key:false },
+  { id:"asok",         name:"อโศก (ARL มักกะสัน)",       key:true  },
+  { id:"khlongtan",    name:"คลองตัน",                   key:false },
+  { id:"sukhumvit71",  name:"สุขุมวิท 71 (รามคำแหง)",    key:false },
+  { id:"huamak",       name:"หัวหมาก",                   key:true  },
+  { id:"banthapchang", name:"บ้านทับช้าง",               key:false },
+  { id:"latkrabang",   name:"ลาดกระบัง",                 key:true  }
+];
+const ORDER_S = STATIONS.map(s => s.id);            // ทิศไปลาดกระบัง
+const ORDER_N = [...ORDER_S].reverse();             // ทิศไปพญาไท
+
+/* ============================================================
+   ส่วนที่ 2: ตารางเวลา (ถอดจากประกาศต้นฉบับทุกตัวเลข)
+   times เรียงตามลำดับสถานีของทิศทางนั้น ๆ, null = ไม่จอด
+   ============================================================ */
+const TRAINS_S = [ // ไปลาดกระบัง
+  {no:"277", type:"ธรรมดา",   from:"กรุงเทพ",   to:"กบินทร์บุรี", times:["15:41","15:45","15:48","15:52","15:54","15:59","16:05","16:12"]},
+  {no:"1211",type:"ดีเซลราง", from:"พญาไท",     to:"ลาดกระบัง",  times:["16:00","16:09","16:14","16:21","16:25","16:31","16:37","16:41"]},
+  {no:"1213",type:"สปรินเตอร์",from:"กรุงเทพ",   to:"ลาดกระบัง",  times:["16:23","16:30","16:34","16:40","16:44","16:51","16:56","21:02"]},
+  {no:"379", type:"ชานเมือง", from:"กรุงเทพ",   to:"ฉะเชิงเทรา", times:["16:45","16:52","16:56","17:00","17:03","17:09","17:15","17:24"]},
+  {no:"391", type:"ชานเมือง", from:"กรุงเทพ",   to:"ฉะเชิงเทรา", times:["17:07","17:13","17:17","17:21","17:24","17:30","17:36","17:45"]},
+  {no:"1217",type:"ดีเซลราง", from:"พญาไท",     to:"ลาดกระบัง",  times:["17:43","17:50","17:53","17:59","18:04","18:11","18:16","18:22"]},
+  {no:"371", type:"ชานเมือง", from:"กรุงเทพ",   to:"ปราจีนบุรี",  times:["17:53","18:02","18:06","18:11","18:13","18:18","18:24","18:34"]},
+  {no:"1215",type:"สปรินเตอร์",from:"พญาไท",     to:"ลาดกระบัง",  times:["18:33","18:39","18:44","18:50","18:54","19:01","19:07","19:12"]},
+  {no:"383", type:"ชานเมือง", from:"กรุงเทพ",   to:"ฉะเชิงเทรา", times:["19:13","19:18","19:23","19:30","19:34","19:42","19:49","19:59"]},
+  {no:"1219",type:"ดีเซลราง", from:"พญาไท",     to:"ลาดกระบัง",  times:["19:33","19:40","19:44","19:50","19:54","20:01","20:08","20:12"]},
+  {no:"1221",type:"สปรินเตอร์",from:"พญาไท",     to:"ลาดกระบัง",  times:["20:03","20:10","20:14","20:20","20:24","20:30","20:37","20:42"]},
+  {no:"1223",type:"สปรินเตอร์",from:"พญาไท",     to:"ลาดกระบัง",  times:["21:33","21:37","21:40","21:50","21:54","22:01","22:07","22:12"]}
+];
+
+const TRAINS_N = [ // ไปพญาไท
+  {no:"1210",type:"ดีเซลราง", from:"ลาดกระบัง",   to:"พญาไท",  times:["15:20","15:26","15:32","15:39","15:42","15:48","15:53","15:59"]},
+  {no:"282", type:"ธรรมดา",   from:"กบินทร์บุรี",  to:"กรุงเทพ", times:["16:18","16:26","16:33",null,  "16:42","16:48","16:55","17:00"]},
+  {no:"1212",type:"ดีเซลราง", from:"ลาดกระบัง",   to:"พญาไท",  times:["17:00","17:06","17:12","17:18","17:22","17:28","17:32","17:39"]},
+  {no:"284", type:"ธรรมดา",   from:"จุกเสม็ด",    to:"กรุงเทพ", times:["17:15","17:27","17:41","17:47","17:51","17:56","18:01","18:06"]},
+  {no:"1214",type:"สปรินเตอร์",from:"ลาดกระบัง",   to:"พญาไท",  times:["17:40","17:45","17:51","17:58","18:02","18:08","18:12","18:19"]},
+  {no:"1218",type:"ดีเซลราง", from:"ลาดกระบัง",   to:"พญาไท",  times:["18:40","18:44","18:51","18:57","19:01","19:08","19:20","19:25"]},
+  {no:"1216",type:"สปรินเตอร์",from:"ลาดกระบัง",   to:"พญาไท",  times:["19:20","19:25","19:31","19:38","19:42","19:48","19:52","19:59"]},
+  {no:"276", type:"ธรรมดา",   from:"บ้านคลองลึก", to:"กรุงเทพ", times:["19:37","19:47","19:54",null,  "20:02","20:07","20:11","20:15"]},
+  {no:"1220",type:"ดีเซลราง", from:"ลาดกระบัง",   to:"พญาไท",  times:["20:20","20:25","20:31","20:38","20:42","20:48","20:52","20:59"]},
+  {no:"1222",type:"สปรินเตอร์",from:"ลาดกระบัง",   to:"พญาไท",  times:["20:50","20:55","21:01","21:08","21:12","21:18","21:22","21:29"]},
+  {no:"1224",type:"สปรินเตอร์",from:"ลาดกระบัง",   to:"กรุงเทพ", times:["22:20","22:25","22:31","22:38","22:42","22:48","22:52","23:05"]}
+];
+
+/* ============================================================
+   ส่วนที่ 3: ทางเลือกสำรอง  << แก้ไขข้อมูลส่วนนี้ก่อนเผยแพร่จริง >>
+   ============================================================ */
+const ALTERNATIVES = [
+  {
+    title:"รถ Shuttle Bus เสริมของ Airport Rail Link",
+    detail:"รถโดยสารเสริมที่ผู้ให้บริการจัดวิ่งทดแทนระหว่างสถานีที่งดให้บริการ",
+    note:"โปรดกรอกจุดขึ้นรถ ความถี่ และช่วงเวลาให้บริการตามประกาศจริงของวันเดินทาง"
+  },
+  {
+    title:"รถโดยสารประจำทาง ขสมก.",
+    detail:"เส้นทางรถเมล์ที่วิ่งขนานแนวถนนใกล้เคียงกับแนวรถไฟช่วงพญาไท ถึง ลาดกระบัง",
+    note:"โปรดระบุหมายเลขสายและจุดจอดที่ใกล้แต่ละสถานีก่อนเผยแพร่"
+  },
+  {
+    title:"รถไฟฟ้า BTS และ MRT",
+    detail:"ใช้เชื่อมต่อการเดินทางในเขตเมืองชั้นในก่อนต่อรถไฟที่สถานีต้นทาง",
+    note:"โปรดระบุสถานีเชื่อมต่อที่ตรวจสอบแล้วเท่านั้น เพื่อไม่ให้ผู้โดยสารเข้าใจผิด"
+  },
+  {
+    title:"รถรับจ้างและบริการเรียกรถ",
+    detail:"ทางเลือกสำหรับผู้โดยสารที่ต้องถึงปลายทางในเวลาจำกัด เช่น ผู้เดินทางต่อเครื่องบิน",
+    note:"แนะนำเผื่อเวลาเพิ่มในชั่วโมงเร่งด่วนช่วง 16:00 ถึง 20:00 นาฬิกา"
+  }
+];
+
+/* ============================================================
+   ส่วนที่ 4: ฟังก์ชันช่วยเหลือ
+   ============================================================ */
+const $ = id => document.getElementById(id);
+
+/** แปลง "HH:MM" เป็นจำนวนนาทีนับจากเที่ยงคืน */
+function toMin(t){
+  if(!t) return null;
+  const [h,m] = t.split(":").map(Number);
+  return h*60 + m;
+}
+/** แปลงนาทีเป็นข้อความ "X ชม. Y นาที" */
+function fmtDur(min){
+  if(min < 60) return min + " นาที";
+  const h = Math.floor(min/60), m = min%60;
+  return m === 0 ? h + " ชม." : h + " ชม. " + m + " นาที";
+}
+/** ดึงชื่อสถานีจาก id */
+const stName = id => (STATIONS.find(s => s.id === id) || {}).name || id;
+
+/* ============================================================
+   ส่วนที่ 5: นาฬิกาเรียลไทม์ (แสดง พ.ศ. ตามธรรมเนียมไทย)
+   ============================================================ */
+const TH_DAYS   = ["อาทิตย์","จันทร์","อังคาร","พุธ","พฤหัสบดี","ศุกร์","เสาร์"];
+const TH_MONTHS = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
+                   "กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+
+function tickClock(){
+  const d  = new Date();
+  const p2 = n => String(n).padStart(2,"0");
+  $("clockTime").textContent = p2(d.getHours())+":"+p2(d.getMinutes())+":"+p2(d.getSeconds());
+  $("clockDate").textContent =
+    "วัน" + TH_DAYS[d.getDay()] + "ที่ " + d.getDate() + " " +
+    TH_MONTHS[d.getMonth()] + " พ.ศ. " + (d.getFullYear()+543);
+
+  // อัปเดตนับถอยหลังของผลลัพธ์ทุกต้นนาที
+  if(d.getSeconds() === 0) renderTrips();
+}
+
+/* ============================================================
+   ส่วนที่ 6: พยากรณ์อากาศ (Open-Meteo ไม่ต้องใช้ API Key)
+   ============================================================ */
+const WX_MAP = {
+  0:["ท้องฟ้าแจ่มใส","\u2600\uFE0F"], 1:["มีเมฆบางส่วน","\uD83C\uDF24\uFE0F"],
+  2:["มีเมฆเป็นส่วนมาก","\u26C5"],   3:["มีเมฆมาก","\u2601\uFE0F"],
+  45:["มีหมอก","\uD83C\uDF2B\uFE0F"],48:["มีหมอกน้ำค้างแข็ง","\uD83C\uDF2B\uFE0F"],
+  51:["ฝนละอองเบา","\uD83C\uDF26\uFE0F"],53:["ฝนละออง","\uD83C\uDF26\uFE0F"],
+  55:["ฝนละอองหนัก","\uD83C\uDF26\uFE0F"],
+  61:["ฝนตกเล็กน้อย","\uD83C\uDF27\uFE0F"],63:["ฝนตกปานกลาง","\uD83C\uDF27\uFE0F"],
+  65:["ฝนตกหนัก","\uD83C\uDF27\uFE0F"],
+  80:["ฝนตกเป็นช่วง","\uD83C\uDF26\uFE0F"],81:["ฝนตกหนักเป็นช่วง","\uD83C\uDF27\uFE0F"],
+  82:["ฝนตกหนักมาก","\u26C8\uFE0F"],
+  95:["พายุฝนฟ้าคะนอง","\u26C8\uFE0F"],96:["ฝนฟ้าคะนองมีลูกเห็บ","\u26C8\uFE0F"],
+  99:["ฝนฟ้าคะนองรุนแรง","\u26C8\uFE0F"]
+};
+
+async function loadWeather(){
+  const url = "https://api.open-meteo.com/v1/forecast"
+    + "?latitude=13.7563&longitude=100.5018"
+    + "&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,precipitation"
+    + "&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max"
+    + "&timezone=Asia%2FBangkok&forecast_days=1";
+  try{
+    const res = await fetch(url);
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    const j = await res.json();
+    const c = j.current, dly = j.daily;
+    const [desc,icon] = WX_MAP[c.weather_code] || ["ไม่ทราบสภาพอากาศ","\uD83C\uDF21\uFE0F"];
+
+    $("wxTemp").textContent = Math.round(c.temperature_2m) + "\u00B0C";
+    $("wxIcon").textContent = icon;
+    $("wxDesc").textContent = desc + " รู้สึกเหมือน " + Math.round(c.apparent_temperature) + "\u00B0C";
+    $("wxMeta").textContent =
+      "ความชื้น " + c.relative_humidity_2m + "% | สูงสุด " + Math.round(dly.temperature_2m_max[0])
+      + "\u00B0 ต่ำสุด " + Math.round(dly.temperature_2m_min[0])
+      + "\u00B0 | โอกาสฝน " + dly.precipitation_probability_max[0] + "%";
+  }catch(e){
+    $("wxTemp").textContent = "--\u00B0";
+    $("wxDesc").textContent = "เรียกข้อมูลอากาศไม่สำเร็จ";
+    $("wxMeta").textContent = "ตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วกดรีเฟรชข้อมูล";
+  }
+}
+
+/* ============================================================
+   ส่วนที่ 7: แถบอัปเดตสถานะเรียลไทม์
+   อ่านจากไฟล์ status.json ที่วางไว้ข้าง index.html
+   ผู้ดูแลแก้ไขไฟล์นั้นไฟล์เดียว หน้าเว็บจะอัปเดตตามทันที
+   ============================================================ */
+async function loadStatus(){
+  const btn = $("btnRefresh");
+  btn.disabled = true;
+  btn.textContent = "กำลังรีเฟรช";
+  const box = $("statusBox");
+  try{
+    const res = await fetch("status.json?t=" + Date.now(), {cache:"no-store"});
+    if(!res.ok) throw new Error("no file");
+    const s = await res.json();
+
+    box.className = "status" + (s.level === "alert" ? " is-alert" : s.level === "warn" ? " is-warn" : "");
+    $("statusTag").textContent = s.tag || "อัปเดตสถานะการเดินรถ";
+    $("statusMsg").textContent = s.message || "ไม่มีข้อความแจ้งเตือน";
+    $("statusList").innerHTML = (s.items || []).map(t => "<li>" + t + "</li>").join("");
+    $("statusTime").textContent = "ข้อมูลประกาศเมื่อ " + (s.updatedAt || "ไม่ระบุ")
+      + " | ตรวจสอบล่าสุด " + new Date().toLocaleTimeString("th-TH");
+  }catch(e){
+    // ยังไม่มีไฟล์ status.json หรือเปิดจากเครื่องโดยตรง
+    box.className = "status is-warn";
+    $("statusTag").textContent = "ยังไม่มีข้อมูลสถานะ";
+    $("statusMsg").textContent = "หน้านี้แสดงตารางเดินรถตามประกาศเท่านั้น ยังไม่ได้เชื่อมกับข้อมูลสถานะรายชั่วโมง";
+    $("statusList").innerHTML =
+      "<li>สร้างไฟล์ status.json วางไว้โฟลเดอร์เดียวกับ index.html เพื่อเปิดใช้งานช่องนี้</li>" +
+      "<li>เมื่อแก้ไขไฟล์แล้ว กดปุ่มรีเฟรชข้อมูลเพื่อดึงประกาศล่าสุด</li>";
+    $("statusTime").textContent = "ตรวจสอบล่าสุด " + new Date().toLocaleTimeString("th-TH");
+  }finally{
+    btn.disabled = false;
+    btn.textContent = "รีเฟรชข้อมูล";
+  }
+}
+
+/* ============================================================
+   ส่วนที่ 8: สร้างตารางเดินรถเต็มจากชุดข้อมูลเดียวกัน
+   (สร้างจาก data โดยตรง จึงไม่มีโอกาสคลาดเคลื่อนจากตัววางแผน)
+   ============================================================ */
+function buildTable(el, trains, order){
+  const head = "<thead><tr><th class='stcol'>สถานี</th>" +
+    trains.map(t =>
+      "<th><span class='trt'>" + t.type + "</span>" +
+      "<span class='tno'>" + t.no + "</span>" +
+      "<span class='trt'>" + t.from + "<br>" + t.to + "</span></th>"
+    ).join("") + "</tr></thead>";
+
+  const body = "<tbody>" + order.map((sid,i) => {
+    const st = STATIONS.find(s => s.id === sid);
+    return "<tr class='" + (st.key ? "key" : "") + "'>" +
+      "<th>" + st.name + "</th>" +
+      trains.map(t => {
+        const v = t.times[i];
+        return v ? "<td>" + v + "</td>" : "<td class='nostop'>&bull;</td>";
+      }).join("") + "</tr>";
+  }).join("") + "</tbody>";
+
+  el.innerHTML = head + body;
+}
+
+/* ============================================================
+   ส่วนที่ 9: ตัววางแผนการเดินทาง
+   ============================================================ */
+function fillSelects(){
+  const opts = STATIONS.map(s => "<option value='" + s.id + "'>" + s.name + "</option>").join("");
+  $("selFrom").innerHTML = opts;
+  $("selTo").innerHTML   = opts;
+  $("selFrom").value = "phayathai";
+  $("selTo").value   = "latkrabang";
+}
+
+/** คืนรายการเที่ยวรถที่วิ่งจาก origin ไป destination */
+function findTrips(fromId, toId){
+  const iFrom = ORDER_S.indexOf(fromId), iTo = ORDER_S.indexOf(toId);
+  if(iFrom === iTo) return null;
+
+  const goingSouth = iTo > iFrom;                       // ไปทางลาดกระบัง
+  const trains = goingSouth ? TRAINS_S : TRAINS_N;
+  const order  = goingSouth ? ORDER_S  : ORDER_N;
+  const a = order.indexOf(fromId), b = order.indexOf(toId);
+
+  return trains.map(t => {
+    const dep = t.times[a], arr = t.times[b];
+    if(!dep || !arr) return null;                        // ขบวนนั้นไม่จอดสถานีใดสถานีหนึ่ง
+    const dm = toMin(dep), am = toMin(arr);
+    if(am <= dm) return null;                            // เวลาไม่สมเหตุสมผล ตัดออก
+    return {
+      no:t.no, type:t.type, from:t.from, to:t.to,
+      dep, arr, depMin:dm, dur:am - dm,
+      suspect:(am - dm) > 180                            // เวลาต่างผิดปกติ ให้ผู้ใช้ตรวจสอบ
+    };
+  }).filter(Boolean).sort((x,y) => x.depMin - y.depMin);
+}
+
+function renderTrips(){
+  const fromId = $("selFrom").value, toId = $("selTo").value;
+  const sum = $("routeSum"), out = $("tripResults");
+
+  if(fromId === toId){
+    sum.textContent = "กรุณาเลือกสถานีต้นทางและปลายทางให้ต่างกัน";
+    out.innerHTML = "";
+    return;
+  }
+
+  // เวลาอ้างอิงสำหรับกรอง
+  const now = new Date();
+  const nowMin = now.getHours()*60 + now.getMinutes();
+  if($("chkNow").checked){
+    $("inpTime").value = String(now.getHours()).padStart(2,"0") + ":" +
+                         String(now.getMinutes()).padStart(2,"0");
+  }
+  const refMin = toMin($("inpTime").value) ?? nowMin;
+  const showAll = $("chkAll").checked;
+
+  const all = findTrips(fromId, toId);
+  const dirText = ORDER_S.indexOf(toId) > ORDER_S.indexOf(fromId) ? "ไปลาดกระบัง" : "ไปพญาไท";
+  sum.textContent = stName(fromId) + " ไป " + stName(toId) +
+                    " (ทิศทาง" + dirText + ") พบ " + all.length + " ขบวนตามตารางประกาศ";
+
+  const list = showAll ? all : all.filter(t => t.depMin >= refMin);
+
+  if(list.length === 0){
+    out.innerHTML = "<div class='empty'>ไม่มีขบวนที่ออกเดินทางหลังเวลา " +
+      $("inpTime").value + " ในเส้นทางนี้<br>" +
+      "กรุณาเลือกเวลาให้เร็วขึ้น หรือเลือกแสดงทุกขบวน หรือพิจารณาทางเลือกสำรองด้านล่าง</div>";
+    return;
+  }
+
+  let markedNext = false;
+  out.innerHTML = "<div class='trips'>" + list.map(t => {
+    const isPast = t.depMin < nowMin;
+    let isNext = false;
+    if(!isPast && !markedNext){ isNext = true; markedNext = true; }
+    const diff = t.depMin - nowMin;
+
+    let cd;
+    if(isPast) cd = "<div class='cd-lbl'>ออกไปแล้ว</div>";
+    else if(diff < 60) cd = "<div class='cd-val'>อีก " + diff + " นาที</div><div class='cd-lbl'>ก่อนออกเดินทาง</div>";
+    else cd = "<div class='cd-val'>อีก " + fmtDur(diff) + "</div><div class='cd-lbl'>ก่อนออกเดินทาง</div>";
+
+    return "<div class='trip " + (isNext ? "is-next" : "") + (isPast ? "is-past" : "") + "'>" +
+      "<div><div class='trip-no'>" + t.no + "</div><div class='trip-type'>" + t.type + "</div></div>" +
+      "<div>" +
+        "<div class='trip-times'>" + t.dep + "<span class='arrow'>&rarr;</span>" + t.arr +
+          (isNext ? "<span class='badge badge-next'>ขบวนถัดไป</span>" : "") +
+          (t.suspect ? "<span class='badge badge-warn'>ตรวจสอบเวลาถึงกับเจ้าหน้าที่</span>" : "") +
+        "</div>" +
+        "<div class='trip-meta'>ใช้เวลา " + fmtDur(t.dur) + " | ขบวนต้นทาง " + t.from + " ปลายทาง " + t.to + "</div>" +
+      "</div>" +
+      "<div class='trip-cd'>" + cd + "</div>" +
+    "</div>";
+  }).join("") + "</div>";
+}
+
+/* ============================================================
+   ส่วนที่ 10: ทางเลือกสำรอง
+   ============================================================ */
+function renderAlts(){
+  $("altList").innerHTML = ALTERNATIVES.map(a =>
+    "<div class='alt'><h3>" + a.title + "</h3><p>" + a.detail + "</p>" +
+    "<div class='note'>" + a.note + "</div></div>"
+  ).join("");
+}
+
+/* ============================================================
+   ส่วนที่ 11: เริ่มการทำงาน
+   ============================================================ */
+function init(){
+  fillSelects();
+  buildTable($("tblS"), TRAINS_S, ORDER_S);
+  buildTable($("tblN"), TRAINS_N, ORDER_N);
+  renderAlts();
+
+  ["selFrom","selTo","inpTime","chkAll"].forEach(id =>
+    $(id).addEventListener("change", () => {
+      if(id === "inpTime") $("chkNow").checked = false;   // ผู้ใช้กำหนดเวลาเอง
+      renderTrips();
+    })
+  );
+  $("chkNow").addEventListener("change", renderTrips);
+  $("btnSwap").addEventListener("click", () => {
+    const a = $("selFrom").value;
+    $("selFrom").value = $("selTo").value;
+    $("selTo").value = a;
+    renderTrips();
+  });
+  $("btnRefresh").addEventListener("click", () => { loadStatus(); loadWeather(); });
+
+  tickClock();
+  setInterval(tickClock, 1000);
+  renderTrips();
+  loadWeather();
+  loadStatus();
+
+  // ดึงข้อมูลอากาศและสถานะซ้ำทุก 10 นาที
+  setInterval(() => { loadWeather(); loadStatus(); }, 600000);
+}
+
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
